@@ -1,13 +1,778 @@
-宝宝：
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>哄哄解压小作战</title>
+  <style>
+    :root{
+      --bg1:#fff1f6; --bg2:#eef4ff; --card:#ffffffcc;
+      --text:#111; --muted:#666; --accent:#ff4d8d; --accent2:#6c7cff;
+      --shadow:0 12px 30px rgba(0,0,0,.10); --r:18px;
+    }
+    *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none;}
+    html,body{height:100%; margin:0; font-family:ui-sans-serif,system-ui,-apple-system,"PingFang SC","Microsoft YaHei",Arial;}
+    body{
+      background:
+        radial-gradient(1200px 700px at 20% 10%, var(--bg1), transparent 60%),
+        radial-gradient(1200px 700px at 80% 0%, var(--bg2), transparent 60%),
+        linear-gradient(180deg,#fff,#f7fbff);
+      overflow:hidden; color:var(--text);
+    }
+    .wrap{height:100%; display:flex; flex-direction:column; gap:10px; padding: env(safe-area-inset-top) 14px env(safe-area-inset-bottom); max-width:620px; margin:0 auto;}
+    header{
+      padding:12px 14px; border-radius:var(--r);
+      background:var(--card); box-shadow:var(--shadow); backdrop-filter:blur(10px);
+      display:flex; gap:10px; align-items:center; justify-content:space-between;
+    }
+    .title{display:flex; flex-direction:column; gap:2px;}
+    .title h1{margin:0; font-size:15px; font-weight:900;}
+    .title p{margin:0; font-size:12px; color:var(--muted);}
+    .hud{display:flex; gap:8px; align-items:center; font-variant-numeric:tabular-nums;}
+    .pill{
+      background:#fff; border-radius:999px; padding:8px 10px; font-size:12px;
+      box-shadow:0 6px 16px rgba(0,0,0,.08); display:flex; align-items:center; gap:6px; white-space:nowrap;
+    }
+    .pill b{font-size:13px;}
+    .btn{
+      border:none; border-radius:12px; padding:10px 12px; font-weight:900; color:#fff; cursor:pointer;
+      background:linear-gradient(135deg,var(--accent),#ff7ab3);
+      box-shadow:0 12px 24px rgba(255,77,141,.25);
+    }
+    .btn.secondary{
+      background:linear-gradient(135deg,var(--accent2),#9aa5ff);
+      box-shadow:0 12px 24px rgba(108,124,255,.22);
+    }
 
-我认真反省：刚刚让你不开心了。
-你可以尽情解气，我负责把坏情绪一只只抓走。
-如果你愿意，我想把你的今天都哄好：奶茶、抱抱、陪你。
+    main{flex:1; position:relative; border-radius:var(--r); background:#ffffffaa; box-shadow:var(--shadow); overflow:hidden;}
+    canvas{width:100%; height:100%; display:block;}
 
-成绩：2447💗  |  贴纸：7 / 8
-判定：🥺 再给我一次机会好吗
+    .topbar{
+      position:absolute; left:12px; right:12px; top:12px; z-index:5;
+      display:flex; gap:10px; align-items:center; justify-content:space-between;
+      pointer-events:none;
+    }
+    .panel{
+      flex:1; padding:10px 12px; border-radius:14px; background:#fff; box-shadow:0 10px 24px rgba(0,0,0,.08);
+      pointer-events:none;
+    }
+    .row{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+    .small{font-size:12px; color:var(--muted); line-height:1.2;}
+    .bar{margin-top:8px; height:10px; border-radius:999px; background:rgba(0,0,0,.06); overflow:hidden;}
+    .bar > i{display:block; height:100%; width:0%; background:linear-gradient(90deg,#ff4d8d,#ffa34d,#6c7cff); border-radius:999px;}
+    .bar2{margin-top:8px; height:10px; border-radius:999px; background:rgba(0,0,0,.06); overflow:hidden;}
+    .bar2 > i{display:block; height:100%; width:0%; background:linear-gradient(90deg,#6c7cff,#9aa5ff); border-radius:999px;}
 
-—— 我
+    .icons{display:flex; gap:8px; align-items:center; pointer-events:none;}
+    .icon{
+      min-width:52px; padding:10px 10px; border-radius:14px; background:#fff; box-shadow:0 10px 24px rgba(0,0,0,.08);
+      font-size:12px; display:flex; flex-direction:column; align-items:center; gap:2px;
+    }
+    .icon b{font-size:12px;}
+    .hint{
+      position:absolute; inset:0; z-index:10;
+      display:flex; align-items:center; justify-content:center; padding:18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.92));
+      backdrop-filter:blur(10px);
+    }
+    .card{
+      width:100%; max-width:560px; background:#fff; border-radius:22px; box-shadow:var(--shadow); padding:16px;
+    }
+    .badge{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 10px; border-radius:999px;
+      background:#fff3f8; color:#b10044; font-weight:800; font-size:12px;
+      border:1px solid rgba(255,77,141,.25);
+      margin-bottom:10px;
+    }
+    .card h2{margin:0 0 6px; font-size:18px;}
+    .card p{margin:8px 0; font-size:13px; color:#333; line-height:1.7; white-space:pre-line;}
+    .rowBtns{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;}
+    .rowBtns .btn{flex:1; min-width:140px;}
+    .toast{
+      position:absolute; left:50%; bottom:16px; transform:translateX(-50%);
+      background:#111; color:#fff; padding:10px 12px; border-radius:999px;
+      font-size:12px; opacity:0; transition:.25s ease; z-index:20; pointer-events:none;
+      box-shadow:0 12px 30px rgba(0,0,0,.25);
+    }
+    .toast.show{opacity:1; transform:translateX(-50%) translateY(-2px);}
 
-贴纸墙：
-[🐰] [🌸] [🎀] [🧸] [💌] [✨] [🍓]
+    .stageTag{
+      position:absolute; left:50%; top:84px; transform:translateX(-50%);
+      background:rgba(255,255,255,.92);
+      border-radius:999px; padding:8px 12px;
+      box-shadow:0 10px 24px rgba(0,0,0,.08);
+      font-size:12px; color:#333;
+      z-index:4;
+    }
+
+    .stickerWall{
+      display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;
+    }
+    .sticker{
+      padding:8px 10px; border-radius:14px; background:#fff7fb; border:1px solid rgba(255,77,141,.18);
+      font-size:12px; display:flex; gap:6px; align-items:center;
+    }
+    .sticker big{font-size:16px; line-height:1;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="title">
+      <h1 id="gameTitle">哄哄解压小作战</h1>
+      <p id="subtitle">90秒解气：戳😤、躲⚡、捡道具、收集贴纸🎀</p>
+    </div>
+    <div class="hud">
+      <div class="pill">⏳ <b id="time">90.0</b>s</div>
+      <div class="pill">💗 <b id="score">0</b></div>
+      <div class="pill">🔥 <b id="mult">x1</b></div>
+      <button class="btn secondary" id="pauseBtn">暂停</button>
+    </div>
+  </header>
+
+  <main id="stage">
+    <div class="topbar">
+      <div class="panel">
+        <div class="row">
+          <div class="small">情绪条：从“生气😤”→“开心😊”</div>
+          <div class="small">目标：<b id="targetText">260</b>💗 + 贴纸<b id="stTarget">8</b></div>
+        </div>
+        <div class="bar"><i id="moodBar"></i></div>
+        <div class="row" style="margin-top:8px">
+          <div class="small">连击能量（越高倍数越大）</div>
+          <div class="small">贴纸碎片：<b id="shards">0</b></div>
+        </div>
+        <div class="bar2"><i id="comboBar"></i></div>
+      </div>
+
+      <div class="icons">
+        <div class="icon"><div>⭐</div><b id="pStar">0</b></div>
+        <div class="icon"><div>❄️</div><b id="pIce">0</b></div>
+        <div class="icon"><div>💣</div><b id="pBomb">0</b></div>
+      </div>
+    </div>
+
+    <div class="stageTag" id="stageTag">阶段 1：戳戳消气（爽）</div>
+    <canvas id="c"></canvas>
+
+    <div class="hint" id="overlay">
+      <div class="card">
+        <div class="badge" id="badge">🎮 开始之前</div>
+        <h2 id="overlayTitle">准备开始哄哄模式</h2>
+        <p id="overlayText"></p>
+        <div class="rowBtns">
+          <button class="btn" id="startBtn">开始（90秒）</button>
+          <button class="btn secondary" id="easyBtn">轻松模式（120秒）</button>
+          <button class="btn secondary" id="rageBtn">解气模式（150秒）</button>
+          <button class="btn secondary" id="copyBtn">复制通关小纸条</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast">已复制 ✅</div>
+  </main>
+</div>
+
+<script>
+/** ====== 你只需要改这里三行 ====== */
+const gfName = "宝宝";
+const myName = "我";
+const sorryReason = "刚刚让你不开心了";
+
+/** ====== 关卡参数（可改） ====== */
+let gameSeconds = 90;
+let targetScore = 260;
+let targetStickers = 8;
+
+/** ===== DOM ===== */
+const stage = document.getElementById("stage");
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d", { alpha:true });
+
+const timeEl = document.getElementById("time");
+const scoreEl = document.getElementById("score");
+const multEl = document.getElementById("mult");
+const pauseBtn = document.getElementById("pauseBtn");
+
+const moodBar = document.getElementById("moodBar");
+const comboBar = document.getElementById("comboBar");
+const targetText = document.getElementById("targetText");
+const stTarget = document.getElementById("stTarget");
+const shardsEl = document.getElementById("shards");
+const stageTag = document.getElementById("stageTag");
+
+const overlay = document.getElementById("overlay");
+const overlayTitle = document.getElementById("overlayTitle");
+const overlayText = document.getElementById("overlayText");
+const startBtn = document.getElementById("startBtn");
+const easyBtn = document.getElementById("easyBtn");
+const rageBtn = document.getElementById("rageBtn");
+const copyBtn = document.getElementById("copyBtn");
+const toast = document.getElementById("toast");
+document.getElementById("gameTitle").textContent = `哄哄解压小作战 · 给${gfName}`;
+targetText.textContent = targetScore;
+stTarget.textContent = targetStickers;
+
+function resize(){
+  const r = stage.getBoundingClientRect();
+  const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  canvas.width = Math.floor(r.width * dpr);
+  canvas.height = Math.floor(r.height * dpr);
+  canvas.style.width = r.width + "px";
+  canvas.style.height = r.height + "px";
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+window.addEventListener("resize", resize);
+resize();
+
+function rand(a,b){ return a + Math.random()*(b-a); }
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+
+/** ===== 轻量音效 ===== */
+let audioOn = true;
+let ac = null;
+function beep(freq=440, dur=0.05, type="sine", vol=0.06){
+  if (!audioOn) return;
+  if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+  const t0 = ac.currentTime;
+  const o = ac.createOscillator();
+  const g = ac.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(freq, t0);
+  g.gain.setValueAtTime(vol, t0);
+  g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+  o.connect(g); g.connect(ac.destination);
+  o.start(t0); o.stop(t0 + dur);
+}
+function buzz(){ beep(120,0.08,"square",0.05); }
+function vibrate(ms=18){ try{ navigator.vibrate && navigator.vibrate(ms); }catch(e){} }
+function toastMsg(msg){
+  toast.textContent = msg;
+  toast.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>toast.classList.remove("show"), 900);
+}
+
+/** ===== 状态 ===== */
+let running=false, paused=false;
+let tLeft=gameSeconds;
+let score=0;
+
+let mood = 0;           // 0..100  (开心度)
+let comboEnergy = 0;    // 0..100
+let mult = 1;           // 1..3
+let starTime = 0;
+let iceTime = 0;
+
+let shards = 0;         // 贴纸碎片
+let stickers = [];      // 已解锁贴纸
+
+const entities = [];
+const particles = [];
+const floatTexts = [];
+const drops = [];       // 道具掉落
+
+/** entity types:
+ * angry 😤: +分
+ * thunder ⚡: -分、断连击
+ * gift 🎀: 掉贴纸碎片
+ */
+function setScore(v){ score = Math.max(0, Math.floor(v)); scoreEl.textContent = score; }
+function setMood(v){
+  mood = clamp(v,0,100);
+  moodBar.style.width = mood + "%";
+}
+function setComboEnergy(v){
+  comboEnergy = clamp(v,0,100);
+  comboBar.style.width = comboEnergy + "%";
+  const newMult = comboEnergy >= 70 ? 3 : comboEnergy >= 35 ? 2 : 1;
+  if (newMult !== mult){
+    mult = newMult;
+    multEl.textContent = "x" + mult;
+    beep(newMult===3?880:660, 0.06, "triangle", 0.05);
+  }
+}
+function setShards(v){
+  shards = Math.max(0, Math.floor(v));
+  shardsEl.textContent = shards;
+}
+
+function currentStage(){
+  const progress = 1 - tLeft/gameSeconds; // 0..1
+  if (progress < 1/3) return 1;
+  if (progress < 2/3) return 2;
+  return 3;
+}
+function updateStageTag(){
+  const s = currentStage();
+  stageTag.textContent =
+    s===1 ? "阶段 1：戳戳消气（爽）" :
+    s===2 ? "阶段 2：小心雷云（刺激）" :
+            "阶段 3：收集贴纸（更喜欢）";
+}
+
+function spawnEntity(){
+  const w = canvas.clientWidth || stage.clientWidth;
+  const h = canvas.clientHeight || stage.clientHeight;
+  const r = rand(40, 68);
+  const s = currentStage();
+
+  // 阶段控制比例
+  let pThunder = s===1 ? 0.10 : s===2 ? 0.24 : 0.20;
+  let pGift    = s===3 ? 0.18 : 0.06;
+
+  const u = Math.random();
+  let type = "angry";
+  if (u < pThunder) type = "thunder";
+  else if (u < pThunder + pGift) type = "gift";
+
+  entities.push({
+    type,
+    x: rand(24, w-24),
+    y: rand(110, h-26),
+    r,
+    vx: rand(-28,28),
+    vy: rand(-18,18),
+    born: performance.now(),
+    life: rand(2400, 3600),
+    hit:false
+  });
+}
+
+function spawnParticles(x,y,emoji,n=10){
+  for(let i=0;i<n;i++){
+    particles.push({
+      x,y, vx:rand(-90,90), vy:rand(-120,-20), g:rand(260,360),
+      a:1, s:rand(0.8,1.35), rot:rand(-1.2,1.2), emoji
+    });
+  }
+}
+function spawnFloat(x,y,txt){ floatTexts.push({x,y,txt, vy:-55, a:1}); }
+function spawnDrop(x,y){
+  // 道具：⭐❄️💣（阶段2/3更容易出💣）
+  const s = currentStage();
+  let p = Math.random();
+  let kind = "star";
+  if (p < 0.50) kind = "star";
+  else if (p < 0.82) kind = "ice";
+  else kind = "bomb";
+  if (s===1 && kind==="bomb") kind = "ice";
+  drops.push({x,y, kind, vy:rand(50,90), a:1});
+}
+
+function drawCloud(x,y,r,mood){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.beginPath();
+  ctx.fillStyle = mood==="angry" ? "rgba(60,72,90,.22)" : "rgba(255,77,141,.14)";
+  ctx.arc(0,0,r*0.62,0,Math.PI*2);
+  ctx.arc(-r*0.45,r*0.05,r*0.45,0,Math.PI*2);
+  ctx.arc(r*0.45,r*0.08,r*0.50,0,Math.PI*2);
+  ctx.arc(0,r*0.22,r*0.55,0,Math.PI*2);
+  ctx.fill();
+  ctx.lineWidth=2;
+  ctx.strokeStyle = mood==="angry" ? "rgba(60,72,90,.25)" : "rgba(255,77,141,.22)";
+  ctx.stroke();
+  ctx.font = `${Math.floor(r*0.9)}px system-ui, Apple Color Emoji, Segoe UI Emoji`;
+  ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText(mood==="angry"?"😤":"😊",0,-2);
+  ctx.restore();
+}
+function drawThunder(x,y,r){
+  ctx.save(); ctx.translate(x,y);
+  ctx.beginPath();
+  ctx.fillStyle="rgba(30,30,30,.18)";
+  ctx.arc(0,0,r*0.62,0,Math.PI*2);
+  ctx.arc(-r*0.45,r*0.05,r*0.45,0,Math.PI*2);
+  ctx.arc(r*0.45,r*0.08,r*0.50,0,Math.PI*2);
+  ctx.arc(0,r*0.22,r*0.55,0,Math.PI*2);
+  ctx.fill();
+  ctx.lineWidth=2; ctx.strokeStyle="rgba(0,0,0,.18)"; ctx.stroke();
+  ctx.font = `${Math.floor(r*0.9)}px system-ui, Apple Color Emoji, Segoe UI Emoji`;
+  ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText("⚡",0,-2);
+  ctx.restore();
+}
+function drawGift(x,y,r){
+  ctx.save(); ctx.translate(x,y);
+  ctx.beginPath();
+  ctx.fillStyle="rgba(255, 122, 179, .14)";
+  ctx.arc(0,0,r*0.62,0,Math.PI*2);
+  ctx.arc(-r*0.45,r*0.05,r*0.45,0,Math.PI*2);
+  ctx.arc(r*0.45,r*0.08,r*0.50,0,Math.PI*2);
+  ctx.arc(0,r*0.22,r*0.55,0,Math.PI*2);
+  ctx.fill();
+  ctx.lineWidth=2; ctx.strokeStyle="rgba(255,77,141,.18)"; ctx.stroke();
+  ctx.font = `${Math.floor(r*0.9)}px system-ui, Apple Color Emoji, Segoe UI Emoji`;
+  ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText("🎀",0,-2);
+  ctx.restore();
+}
+function drawDrop(d){
+  ctx.save(); ctx.translate(d.x,d.y); ctx.globalAlpha=d.a;
+  ctx.font="24px system-ui, Apple Color Emoji, Segoe UI Emoji";
+  ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText(d.kind==="star"?"⭐":d.kind==="ice"?"❄️":"💣",0,0);
+  ctx.restore();
+}
+function drawParticle(p){
+  ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.globalAlpha=p.a;
+  ctx.font = `${Math.floor(20*p.s)}px system-ui, Apple Color Emoji, Segoe UI Emoji`;
+  ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText(p.emoji,0,0);
+  ctx.restore();
+}
+function drawFloat(f){
+  ctx.save(); ctx.globalAlpha=f.a;
+  ctx.font="800 14px system-ui"; ctx.fillStyle="rgba(0,0,0,.78)";
+  ctx.textAlign="center"; ctx.fillText(f.txt,f.x,f.y);
+  ctx.restore();
+}
+
+/** ===== 主循环 ===== */
+let last = performance.now();
+let spawnAcc = 0;
+
+function step(now){
+  const dt = Math.min(0.033, (now-last)/1000);
+  last = now;
+
+  const w = canvas.clientWidth || stage.clientWidth;
+  const h = canvas.clientHeight || stage.clientHeight;
+
+  if (running && !paused){
+    tLeft -= dt;
+    if (tLeft <= 0){ tLeft = 0; endGame(); }
+    timeEl.textContent = tLeft.toFixed(1);
+
+    updateStageTag();
+
+    if (starTime>0) starTime = Math.max(0, starTime - dt);
+    if (iceTime>0)  iceTime  = Math.max(0, iceTime - dt);
+
+    // 生成频率：阶段越后越密
+    const s = currentStage();
+    const spawnEvery = s===1 ? 0.55 : s===2 ? 0.45 : 0.40;
+    spawnAcc += dt;
+    if (spawnAcc > spawnEvery){
+      spawnAcc = 0;
+      if (entities.length < 12) spawnEntity();
+    }
+
+    // 更新实体
+    const speedFactor = iceTime>0 ? 0.40 : 1;
+    for(let i=entities.length-1;i>=0;i--){
+      const e = entities[i];
+      e.x += e.vx * dt * speedFactor;
+      e.y += e.vy * dt * speedFactor;
+      if (e.x < 24 || e.x > w-24) e.vx *= -1;
+      if (e.y < 110 || e.y > h-26) e.vy *= -1;
+      if (now - e.born > e.life) entities.splice(i,1);
+    }
+
+    // 道具掉落更新
+    for(let i=drops.length-1;i>=0;i--){
+      const d = drops[i];
+      d.y += d.vy * dt;
+      d.a -= 0.22*dt;
+      if (d.a<=0 || d.y>h+30) drops.splice(i,1);
+    }
+
+    // 粒子/浮字
+    for(let i=particles.length-1;i>=0;i--){
+      const p = particles[i];
+      p.x += p.vx*dt; p.y += p.vy*dt; p.vy += p.g*dt;
+      p.a -= 1.3*dt;
+      if (p.a<=0 || p.y>h+40) particles.splice(i,1);
+    }
+    for(let i=floatTexts.length-1;i>=0;i--){
+      const f = floatTexts[i];
+      f.y += f.vy*dt; f.a -= 1.3*dt;
+      if (f.a<=0) floatTexts.splice(i,1);
+    }
+
+    // 连击衰减
+    setComboEnergy(comboEnergy - 10*dt);
+  }
+
+  // 绘制
+  ctx.clearRect(0,0,w,h);
+  ctx.save();
+  ctx.globalAlpha=0.35;
+  for(let i=0;i<26;i++){
+    ctx.beginPath();
+    const x=(i*41+(now/40)%41)%(w+40)-20;
+    const y=100+(i*57)%(h-100);
+    ctx.fillStyle=i%2?"rgba(255,77,141,.15)":"rgba(108,124,255,.12)";
+    ctx.arc(x,y,4+(i%3),0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+
+  // buff提示
+  if (starTime>0){
+    ctx.save(); ctx.globalAlpha=.9; ctx.font="800 12px system-ui";
+    ctx.fillStyle="rgba(255,77,141,.9)";
+    ctx.fillText(`⭐ 双倍 ${starTime.toFixed(0)}s`, 14, 96);
+    ctx.restore();
+  }
+  if (iceTime>0){
+    ctx.save(); ctx.globalAlpha=.9; ctx.font="800 12px system-ui";
+    ctx.fillStyle="rgba(108,124,255,.95)";
+    ctx.fillText(`❄️ 减速 ${iceTime.toFixed(0)}s`, 14, 112);
+    ctx.restore();
+  }
+
+  for(const e of entities){
+    if (e.type==="thunder") drawThunder(e.x,e.y,e.r);
+    else if (e.type==="gift") drawGift(e.x,e.y,e.r);
+    else drawCloud(e.x,e.y,e.r, e.hit?"happy":"angry");
+  }
+  drops.forEach(drawDrop);
+  particles.forEach(drawParticle);
+  floatTexts.forEach(drawFloat);
+
+  requestAnimationFrame(step);
+}
+requestAnimationFrame(step);
+
+/** ===== 点击判定 ===== */
+function getPos(ev){
+  const rect=canvas.getBoundingClientRect();
+  const p=(ev.touches&&ev.touches[0])?ev.touches[0]:ev;
+  return {x:p.clientX-rect.left, y:p.clientY-rect.top};
+}
+function inCircle(x,y,cx,cy,r){
+  const dx=x-cx, dy=y-cy; return dx*dx+dy*dy <= r*r;
+}
+
+function applyDrop(kind){
+  if (kind==="star"){ starTime=12; beep(880,.06,"triangle",.05); toastMsg("⭐ 双倍得分启动！"); }
+  else if (kind==="ice"){ iceTime=7; beep(520,.06,"sine",.05); toastMsg("❄️ 冰冻减速启动！"); }
+  else {
+    const removed = Math.min(entities.length, 7);
+    for(let i=0;i<removed;i++){
+      const e=entities.pop();
+      if (e) spawnParticles(e.x,e.y,"💥",10);
+    }
+    const gain = 30 + removed*4;
+    setScore(score + gain);
+    setMood(mood + 8);
+    setComboEnergy(comboEnergy + 20);
+    beep(160,.08,"square",.06);
+    toastMsg(`💣 清屏！+${gain}💗`);
+  }
+}
+
+function unlockSticker(){
+  const pool = ["🐱","🐰","🧸","🌸","🍓","🎀","✨","🧋","🌙","💌"];
+  const e = pool[(stickers.length + Math.floor(Math.random()*pool.length)) % pool.length];
+  stickers.push(e);
+}
+
+function hitTest(x,y){
+  // 先收道具
+  for(let i=drops.length-1;i>=0;i--){
+    const d=drops[i];
+    if (inCircle(x,y,d.x,d.y,18)){
+      drops.splice(i,1);
+      applyDrop(d.kind);
+      spawnParticles(x,y, d.kind==="star"?"⭐":d.kind==="ice"?"❄️":"💣", 10);
+      vibrate(12);
+      return true;
+    }
+  }
+
+  // 再点实体
+  for(let i=entities.length-1;i>=0;i--){
+    const e=entities[i];
+    if (!inCircle(x,y,e.x,e.y,e.r*0.72)) continue;
+
+    // 雷云：扣分断连击
+    if (e.type==="thunder"){
+      setScore(score - 20);
+      setMood(mood - 6);
+      setComboEnergy(0);
+      spawnParticles(e.x,e.y,"⚡",12);
+      spawnFloat(e.x, e.y - e.r*0.9, "⚡扣分&断连击！");
+      buzz(); vibrate(28);
+      entities.splice(i,1);
+      return true;
+    }
+
+    // 礼物：掉贴纸碎片
+    if (e.type==="gift"){
+      setShards(shards + 1);
+      setMood(mood + 6);
+      setComboEnergy(comboEnergy + 12);
+      spawnParticles(e.x,e.y,"🎀",10);
+      spawnFloat(e.x, e.y - e.r*0.9, "+贴纸碎片");
+      beep(740,.05,"triangle",.045);
+      vibrate(10);
+      entities.splice(i,1);
+
+      // 每 2 个碎片解锁一个贴纸
+      if (shards % 2 === 0){
+        unlockSticker();
+        toastMsg(`解锁贴纸：${stickers[stickers.length-1]}`);
+      }
+      checkWin();
+      return true;
+    }
+
+    // 生气云：得分 + 开心度
+    if (!e.hit){
+      e.hit=true;
+      const base = 7 + Math.floor(Math.random()*4);
+      const starMul = starTime>0 ? 2 : 1;
+      const gain = base * mult * starMul;
+      setScore(score + gain);
+      setMood(mood + (2 + mult));     // 倍数越高越“变开心”
+      setComboEnergy(comboEnergy + 18);
+      spawnParticles(e.x,e.y,"💗",10);
+      spawnFloat(e.x, e.y - e.r*0.9, `+${gain}💗`);
+      beep(660 + mult*80, 0.05, "triangle", 0.05);
+      vibrate(10);
+
+      if (Math.random() < 0.18) spawnDrop(e.x,e.y);
+      e.born = performance.now();
+      e.life = 520;
+    } else {
+      const gain = 1 * (starTime>0 ? 2 : 1);
+      setScore(score + gain);
+      setMood(mood + 1);
+      setComboEnergy(comboEnergy + 8);
+      spawnFloat(e.x, e.y - e.r*0.9, `+${gain}`);
+      beep(520,0.03,"sine",0.03);
+    }
+
+    checkWin();
+    return true;
+  }
+
+  // 点空：轻微惩罚
+  setComboEnergy(comboEnergy - 10);
+  spawnFloat(x,y,"再戳准一点～");
+  return false;
+}
+
+canvas.addEventListener("pointerdown",(e)=>{
+  if (!running || paused) return;
+  try{ ac && ac.resume && ac.resume(); }catch(_){}
+  const {x,y}=getPos(e);
+  hitTest(x,y);
+});
+canvas.addEventListener("touchstart",(e)=>{ e.preventDefault(); }, {passive:false});
+
+/** ===== 流程 ===== */
+function togglePause(){
+  if (!running) return;
+  paused = !paused;
+  pauseBtn.textContent = paused ? "继续" : "暂停";
+  toastMsg(paused ? "已暂停" : "继续哄哄！");
+}
+pauseBtn.addEventListener("click", togglePause);
+
+function buildLetter(finalScore){
+  const okScore = finalScore >= targetScore;
+  const okSticker = stickers.length >= targetStickers;
+
+  const lines = [];
+  lines.push(`${gfName}：`);
+  lines.push("");
+  lines.push(`我认真反省：${sorryReason || "我不该惹你生气"}。`);
+  lines.push("你可以尽情解气，我负责把坏情绪一只只抓走。");
+  lines.push("如果你愿意，我想把你的今天都哄好：奶茶、抱抱、陪你。");
+  lines.push("");
+  lines.push(`成绩：${finalScore}💗  |  贴纸：${stickers.length} / ${targetStickers}`);
+  lines.push(okScore && okSticker ? "判定：✅ 哄好成功（非常认真）" : "判定：🥺 再给我一次机会好吗");
+  lines.push("");
+  lines.push(`—— ${myName}`);
+  return lines.join("\n");
+}
+
+function stickerLine(){
+  if (stickers.length===0) return "（还没解锁贴纸，快去点🎀！）";
+  return stickers.map(s=>`[${s}]`).join(" ");
+}
+
+function showOverlay(title, text, badge="🎁 结算"){
+  document.getElementById("badge").textContent = badge;
+  overlayTitle.textContent = title;
+  overlayText.textContent = text + "\n\n贴纸墙：\n" + stickerLine();
+  overlay.style.display = "flex";
+}
+
+function checkWin(){
+  // 让通关条件更“女生向”：要分数+贴纸
+  if (score >= targetScore && stickers.length >= targetStickers){
+    endGame(true);
+  }
+}
+
+function startGame(seconds){
+  gameSeconds = seconds;
+  tLeft = gameSeconds;
+
+  // 目标根据时长自动微调（越长目标越高）
+  targetScore = Math.round(260 * (gameSeconds/90));
+  targetStickers = Math.round(8 * (gameSeconds/90));
+  targetText.textContent = targetScore;
+  stTarget.textContent = targetStickers;
+
+  running=true; paused=false;
+  setScore(0);
+  setMood(10);         // 开局给一点点“希望”
+  setComboEnergy(0);
+  mult=1; multEl.textContent="x1";
+  starTime=0; iceTime=0;
+
+  setShards(0);
+  stickers = [];
+
+  entities.length=0; particles.length=0; floatTexts.length=0; drops.length=0;
+  pauseBtn.textContent="暂停";
+  overlay.style.display="none";
+  timeEl.textContent=tLeft.toFixed(1);
+  updateStageTag();
+
+  for(let i=0;i<5;i++) spawnEntity();
+  toastMsg("开戳！越到后面越解气～");
+}
+
+function endGame(win=false){
+  running=false; paused=false;
+  const okScore = score >= targetScore;
+  const okSticker = stickers.length >= targetStickers;
+  const reallyWin = win || (okScore && okSticker);
+
+  const title = reallyWin ? `好耶！${gfName}现在更开心了～😊` : `差一点点！再来一次更解气～`;
+  const badge = reallyWin ? "🎉 哄好成功" : "🥺 再努力";
+  showOverlay(title, buildLetter(score), badge);
+}
+
+startBtn.addEventListener("click", ()=>{
+  try{ if(!ac) ac=new (window.AudioContext||window.webkitAudioContext)(); ac.resume && ac.resume(); }catch(_){}
+  startGame(90);
+});
+easyBtn.addEventListener("click", ()=>startGame(120));
+rageBtn.addEventListener("click", ()=>startGame(150));
+
+copyBtn.addEventListener("click", async ()=>{
+  try{
+    await navigator.clipboard.writeText(overlayText.textContent);
+    toastMsg("已复制 ✅");
+  }catch(e){
+    toastMsg("复制失败（可手动长按复制）");
+  }
+});
+
+// 初始说明
+showOverlay(
+  `给${gfName}的“更解气版本”`,
+  `玩法：\n- 点😤加分 + 提升开心度\n- ⚡雷云别点：扣分&断连击\n- 🎀礼物泡泡：掉贴纸碎片，解锁贴纸墙\n- 随机道具：⭐双倍、❄️减速、💣清屏（很解压）\n\n通关条件：达到目标💗并解锁足够贴纸\n\n选一个模式开始：`,
+  "🎮 开始之前"
+);
+</script>
+</body>
+</html>
